@@ -7,6 +7,6 @@ use warnings;
 use Test::More tests => 2;
 
 # verify that the module compiles
-ok(require('check_pgactivity'), 'Script loaded ok');
+ok(require('check_pgactivity'), 'Script loaded ok') or exit;
 ok(defined &run, 'Run subroutine is defined');
 
