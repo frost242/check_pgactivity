@@ -21,7 +21,7 @@ offers many options to measure and monitor useful performance metrics.
 
 =cut
 
-use vars qw($VERSION $PROGRAM);
+#use vars qw($VERSION $PROGRAM);
 
 use strict;
 use warnings;
@@ -57,8 +57,8 @@ delete $ENV{'LANGUAGE'};
 
 $| = 1;
 
-$VERSION = '2.3';
-$PROGRAM = 'check_pgactivity';
+our $VERSION = '2.3';
+our $PROGRAM = 'check_pgactivity';
 
 my $PG_VERSION_MIN =  70400;
 my $PG_VERSION_74  =  70400;
