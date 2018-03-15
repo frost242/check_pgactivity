@@ -1,0 +1,21 @@
+language: perl
+perl:
+  - '5.8'
+  - '5.24'
+
+env:
+  - POSTGRESQL_VERSION=8.4
+  - POSTGRESQL_VERSION=9.0
+  - POSTGRESQL_VERSION=9.1
+  - POSTGRESQL_VERSION=9.2
+  - POSTGRESQL_VERSION=9.3
+  - POSTGRESQL_VERSION=9.4
+  - POSTGRESQL_VERSION=9.5
+  - POSTGRESQL_VERSION=9.6
+  - POSTGRESQL_VERSION=10
+
+before_install:
+  - sudo service postgresql stop && sudo service postgresql start $POSTGRESQL_VERSION
+
+script:
+  - psql -U postgres -tc 'SHOW server_version'
