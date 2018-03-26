@@ -4115,7 +4115,8 @@ sub check_last_maintenance {
             SELECT coalesce(min(
                 extract(epoch FROM current_timestamp -
                     greatest(last_${type}, last_auto${type})
-                )), 'NaN'::float)
+                )), 'NaN'::float),
+                sum(n_tup_ins + n_tup_del + n_tup_upd) AS modified_tuples
             FROM pg_stat_user_tables
         },
         $PG_VERSION_91 => qq{
@@ -4124,7 +4125,8 @@ sub check_last_maintenance {
                     greatest(last_${type}, last_auto${type})
                 )), 'NaN'::float),
                 coalesce(sum(${type}_count), 0) AS ${type}_count,
-                coalesce(sum(auto${type}_count), 0) AS auto${type}_count
+                coalesce(sum(auto${type}_count), 0) AS auto${type}_count,
+                sum(n_tup_ins + n_tup_del + n_tup_upd) AS modified_tuples
             FROM pg_stat_user_tables
         }
     );
@@ -4173,12 +4175,15 @@ LOOP_DB: foreach my $db (@all_db) {
 
         push @perfdata => [ $db, $rs->[0], 's', $w_limit, $c_limit ];
 
+        my $delta_mod  = $rs->[3] - $counts{$db}[2];
+
         if ($hosts[0]->{'version_num'} >= $PG_VERSION_91 ) {
-            $new_counts{$db} = [$rs->[1], $rs->[2]];
+            $new_counts{$db} = [$rs->[1], $rs->[2], $rs->[0], $rs->[3]];
 
             if ( defined $counts{$db} ) {
                 my $delta      = $rs->[1] - $counts{$db}[0];
                 my $delta_auto = $rs->[2] - $counts{$db}[1];
+                my $delta_mod  = $rs->[3] - $counts{$db}[2];
 
                 push @perfdata => (
                     [ "$db $type", $delta ],
@@ -4186,13 +4191,16 @@ LOOP_DB: foreach my $db (@all_db) {
                 );
             }
         }
+        else {
+            $new_counts{$db} = [0, 0, $rs->[0], $rs->[3]];
+        }
 
-        if ( $rs->[0] =~ /^-inf/i or $rs->[0] >= $c_limit ) {
+        if ( ( $rs->[0] =~ /^-inf/i or $rs->[0] >= $c_limit ) and $delta_mod != 0) {
             push @msg_crit => "$db: " . to_interval($rs->[0]);
             next LOOP_DB;
         }
 
-        if ( $rs->[0] >= $w_limit ) {
+        if ( $rs->[0] >= $w_limit and $delta_mod != 0) {
             push @msg_warn => "$db: " . to_interval($rs->[0]);
             next LOOP_DB;
         }
