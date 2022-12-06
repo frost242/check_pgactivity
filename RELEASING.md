@@ -33,7 +33,10 @@ Update documentation using the following commands:
 ~~~
 pod2text check_pgactivity > README
 podselect check_pgactivity > README.pod
+perl -MPod::Markdown -e 'Pod::Markdown->new->filter(@ARGV)' README.pod > README.md
 ~~~
+
+If Pod::Markdown is not installed, install it with `cpan -i Pod::Markdown`.
 
 Update the `contributors` file with new contributors.
 
